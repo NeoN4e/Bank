@@ -11,8 +11,8 @@ namespace Bank2
 {
     class BankAccount : INotifyPropertyChanged
     {
-        public static ObservableCollection<BankAccount> obslist = new ObservableCollection<BankAccount>();
-
+        volatile public static ObservableCollection<BankAccount> obslist = new ObservableCollection<BankAccount>();
+        
         public int CartId{get;private set;}
 
         double summ;
@@ -24,17 +24,16 @@ namespace Bank2
                 //Заблокируем счет
                 Mutex mutex = new Mutex(false, "BankAccount" + CartId.ToString());
                 mutex.WaitOne();
-
                 Thread.Sleep(2000);
 
                 //Проверим достаточно ли средств
                 if ((this.summ + value) < 0) throw new NotEnoughMoneyException("Нелостаточно денег");
                 this.summ = value;
 
+                if (PropertyChanged != null) PropertyChanged(this, new PropertyChangedEventArgs("Summ"));
+
                 //Разблокируем
                 mutex.ReleaseMutex();
-
-                if (PropertyChanged != null) PropertyChanged(this, new PropertyChangedEventArgs("Summ"));
             }
             
         }

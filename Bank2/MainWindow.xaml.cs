@@ -25,10 +25,12 @@ namespace Bank2
         {
             InitializeComponent();
 
-            Binding bind = new Binding();
-            bind.Source = BankAccount.obslist;
-            this.listbox.SetBinding(ListBox.ItemsSourceProperty, bind);
+            //Binding bind = new Binding();
+            //bind.Source = BankAccount.obslist;
+            //bind.IsAsync = true;
+            //this.listbox.SetBinding(ListBox.ItemsSourceProperty, bind);
 
+            //listbox.ItemsSource = BankAccount.obslist;
             //if (name != "Main window")
             //{ new MainWindow("Second window").Show();}
 
@@ -39,31 +41,34 @@ namespace Bank2
         {
             InitializeComponent();
 
-            Binding bind = new Binding();
-            bind.Source = BankAccount.obslist;
-            this.listbox.SetBinding(ListBox.ItemsSourceProperty, bind);
-
+            //Binding bind = new Binding();
+            //bind.Source = BankAccount.obslist;
+            //bind.IsAsync = true;
+            //this.listbox.SetBinding(ListBox.ItemsSourceProperty, bind);
+            //listbox.ItemsSource = BankAccount.obslist;
             this.Title = "Main window";
+
+            //Dispatcher.Invoke( () => //new MainWindow("Second window").Show() );
 
             //Dispatcher.BeginInvoke(new (Delegate)delegate(){});
             //Dispatcher. BeginInvoke( delegate()
            // {
            //     new MainWindow("Second window").Show();
            // });
-                //Thread t = new Thread(() =>
-                //{
-                //    try
-                //    {
-                      new MainWindow("Second window").Show();
-            //System.Windows.Threading.Dispatcher.CurrentDispatcher.BeginInvoke(new (System.Delegate)delegate(() => new MainWindow("Second window").Show()));
-                //        System.Windows.Threading.Dispatcher.Run();
-                //    }
-                //    catch (Exception ex)
-                //    { MessageBox.Show(ex.Message); }
-                //}
-                //);
-                //t.SetApartmentState(ApartmentState.STA);
-                //t.Start();
+            Thread t = new Thread(() =>
+            {
+                try
+                {
+                    new MainWindow("Second window").Show();
+            //        //System.Windows.Threading.Dispatcher.CurrentDispatcher.BeginInvoke(new (System.Delegate)delegate(() => new MainWindow("Second window").Show()));
+                    System.Windows.Threading.Dispatcher.Run();
+                }
+                catch (Exception ex)
+                { MessageBox.Show(ex.Message); }
+            }
+            );
+            t.SetApartmentState(ApartmentState.STA);
+            t.Start();
             // System.Windows.Threading.Dispatcher.Run();
                 
 
@@ -80,7 +85,7 @@ namespace Bank2
             {
                 //Создадим Новый счет
                 new BankAccount(Convert.ToInt32(this.Input.Text));
-
+                Updatelist();
                 //MessageBox.Show(String.Format("{0:#.00}", 11234567889));
             }
             catch (Exception ex)
@@ -94,12 +99,59 @@ namespace Bank2
             try
             {
                 BankAccount Shet = (BankAccount)this.listbox.SelectedItem;
-                Shet.add(Convert.ToDouble(this.AddMoneySumm.Text.Replace(".",",")));
+
+                double Sum = Convert.ToDouble(this.AddMoneySumm.Text.Replace(".", ","));
+                Thread th = new Thread( ()=>
+                {
+                    try
+                    {
+                        Shet.add(Sum);
+                    }
+                    catch (Exception ex)
+                    {
+                        MessageBox.Show(ex.Message);
+                    }
+                }
+                );
+                th.Start();
+                th.Join();
+
+                //Updatelist();
+                MessageBox.Show(this.Title + " Done");
             }
             catch (Exception ex)
             {
                 MessageBox.Show(ex.Message);
             }
+        }
+
+        private void Window_Initialized(object sender, EventArgs e)
+        {
+            //BankAccount.obslist.CollectionChanged +=
+            //    (se, ea) => this.Dispatcher.BeginInvoke( (ThreadStart)delegate() 
+            //    { 
+            //        //this.listbox.ItemsSource = BankAccount.obslist; 
+            //        //this.listbox.Items.
+            //        this.listbox.Items.Clear();
+            //        foreach (BankAccount acc in BankAccount.obslist)
+            //        {
+            //            this.listbox.Items.Add(acc);
+            //        }
+            //    });
+        }
+
+        void Updatelist()
+        {
+            this.listbox.Items.Clear();
+            foreach (BankAccount acc in BankAccount.obslist)
+            {
+                this.listbox.Items.Add(acc);
+            }
+        }
+
+        private void Button_Click(object sender, RoutedEventArgs e)
+        {
+            Updatelist();
         }
     }
 }
