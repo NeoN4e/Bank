@@ -93,14 +93,6 @@ namespace Bank2
         private void Window_Initialized(object sender, EventArgs e)
         {
             //this.listbox.ItemsSource = BankAccount.obslist;
-            //Binding bind = new Binding();
-            //bind.Source = BankAccount.obslist;
-            //bind.IsAsync = true;
-            //this.listbox.SetBinding(ListBox.ItemsSourceProperty, bind);
-
-            //listbox.ItemsSource = BankAccount.obslist;
-            //if (name != "Main window")
-            //{ new MainWindow("Second window").Show();}
 
             //Биндинг - Стандартный не работает :(
                 BankAccount.obslist.CollectionChanged +=
