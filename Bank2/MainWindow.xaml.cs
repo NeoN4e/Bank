@@ -21,10 +21,78 @@ namespace Bank2
     /// </summary>
     public partial class MainWindow : Window
     {
+        ///<summary>Конструктор 2-го окна</summary>
         public MainWindow(String name)
         {
             InitializeComponent();
+            this.Title = name;
+         }
 
+        ///<summary>Конструктор Главного окна</summary>
+        public MainWindow()
+        {
+            InitializeComponent();
+            this.Title = "Main window";
+
+            //В Отдельном потоке Новое окно
+            Thread t = new Thread(() =>
+            {
+                try
+                {
+                    new MainWindow("Second window").Show();
+                    System.Windows.Threading.Dispatcher.Run(); // Штука чтоб оно не закрывалось...
+                }
+                catch (Exception ex)
+                { MessageBox.Show("Поток: Second window" + ex.Message); }
+            }
+            );
+            t.SetApartmentState(ApartmentState.STA);
+            t.Start();
+        }
+
+        ///<summary>ДДобавляет новый счет</summary>
+        private void AddAccount(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                //Создадим Новый счет
+                new BankAccount(this.Input.Text);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message);
+            }
+        }
+
+        /// <summary>Увеличить - Уменьшить Сумму счета</summary>
+        private void AddMoney(object sender, RoutedEventArgs e)
+        {
+       
+            BankAccount Shet = (BankAccount)this.listbox.SelectedItem;
+            double Sum = Convert.ToDouble(this.AddMoneySumm.Text.Replace(".", ","));
+               
+            //В отдельном потоке чтоб 2-е окно не тормозило
+            Thread th = new Thread( ()=>
+            {
+                try
+                {
+                    Shet.add(Sum);
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show(ex.Message);
+                }
+            }
+            );
+            th.Start();
+            th.Join();
+
+            MessageBox.Show(this.Title + " Done");
+        }
+
+        private void Window_Initialized(object sender, EventArgs e)
+        {
+            //this.listbox.ItemsSource = BankAccount.obslist;
             //Binding bind = new Binding();
             //bind.Source = BankAccount.obslist;
             //bind.IsAsync = true;
@@ -34,124 +102,16 @@ namespace Bank2
             //if (name != "Main window")
             //{ new MainWindow("Second window").Show();}
 
-            this.Title = name;
-         }
-
-        public MainWindow()
-        {
-            InitializeComponent();
-
-            //Binding bind = new Binding();
-            //bind.Source = BankAccount.obslist;
-            //bind.IsAsync = true;
-            //this.listbox.SetBinding(ListBox.ItemsSourceProperty, bind);
-            //listbox.ItemsSource = BankAccount.obslist;
-            this.Title = "Main window";
-
-            //Dispatcher.Invoke( () => //new MainWindow("Second window").Show() );
-
-            //Dispatcher.BeginInvoke(new (Delegate)delegate(){});
-            //Dispatcher. BeginInvoke( delegate()
-           // {
-           //     new MainWindow("Second window").Show();
-           // });
-            Thread t = new Thread(() =>
-            {
-                try
+            //Биндинг - Стандартный не работает :(
+                BankAccount.obslist.CollectionChanged +=
+                (se, ea) => this.Dispatcher.BeginInvoke((ThreadStart)delegate()
                 {
-                    new MainWindow("Second window").Show();
-            //        //System.Windows.Threading.Dispatcher.CurrentDispatcher.BeginInvoke(new (System.Delegate)delegate(() => new MainWindow("Second window").Show()));
-                    System.Windows.Threading.Dispatcher.Run();
-                }
-                catch (Exception ex)
-                { MessageBox.Show(ex.Message); }
-            }
-            );
-            t.SetApartmentState(ApartmentState.STA);
-            t.Start();
-            // System.Windows.Threading.Dispatcher.Run();
-                
-
-            //Dispatcher.BeginInvoke(new Action(delegate()
-            //{
-            //    new MainWindow("Second window").Show();
-            //}));
-        }
-
-
-        private void AddAccount(object sender, RoutedEventArgs e)
-        {
-            try
-            {
-                //Создадим Новый счет
-                new BankAccount(Convert.ToInt32(this.Input.Text));
-                Updatelist();
-                //MessageBox.Show(String.Format("{0:#.00}", 11234567889));
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show(ex.Message);
-            }
-        }
-
-        private void AddMoney(object sender, RoutedEventArgs e)
-        {
-            try
-            {
-                BankAccount Shet = (BankAccount)this.listbox.SelectedItem;
-
-                double Sum = Convert.ToDouble(this.AddMoneySumm.Text.Replace(".", ","));
-                Thread th = new Thread( ()=>
-                {
-                    try
+                    this.listbox.Items.Clear();
+                    foreach (BankAccount acc in BankAccount.obslist)
                     {
-                        Shet.add(Sum);
+                        this.listbox.Items.Add(acc);
                     }
-                    catch (Exception ex)
-                    {
-                        MessageBox.Show(ex.Message);
-                    }
-                }
-                );
-                th.Start();
-                th.Join();
-
-                //Updatelist();
-                MessageBox.Show(this.Title + " Done");
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show(ex.Message);
-            }
-        }
-
-        private void Window_Initialized(object sender, EventArgs e)
-        {
-            //BankAccount.obslist.CollectionChanged +=
-            //    (se, ea) => this.Dispatcher.BeginInvoke( (ThreadStart)delegate() 
-            //    { 
-            //        //this.listbox.ItemsSource = BankAccount.obslist; 
-            //        //this.listbox.Items.
-            //        this.listbox.Items.Clear();
-            //        foreach (BankAccount acc in BankAccount.obslist)
-            //        {
-            //            this.listbox.Items.Add(acc);
-            //        }
-            //    });
-        }
-
-        void Updatelist()
-        {
-            this.listbox.Items.Clear();
-            foreach (BankAccount acc in BankAccount.obslist)
-            {
-                this.listbox.Items.Add(acc);
-            }
-        }
-
-        private void Button_Click(object sender, RoutedEventArgs e)
-        {
-            Updatelist();
+                });
         }
     }
 }
